@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F4EAD5">
+  <title>Ruta del Guardián</title>
+  <meta name="description" content="Recorre Puerto Colombia, escanea los afiches y desbloquea los cinco niveles de Guardián de Memorias.">
+  <link rel="stylesheet" href="css/ruta.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="centro"><span class="cinta">Guardián de Memorias</span></div>
+    <h1 class="titulo">Ruta del Guardián</h1>
+    <p class="sub">Camina por Puerto Colombia, busca los afiches y desbloquea los 5 niveles.</p>
+
+    <section class="tarjeta">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <b class="slab">Tu progreso</b><span id="cuenta" class="slab"></span>
+      </div>
+      <div class="barra"><i id="barra" style="width:0"></i></div>
+      <p id="consejo" class="nota" style="margin-top:8px"></p>
+    </section>
+
+    <section class="camino" id="camino" aria-label="Estaciones de la ruta"></section>
+
+    <section class="tarjeta" style="margin-top:8px">
+      <b class="slab">¿Cómo funciona?</b>
+      <ol style="margin:8px 0 0 20px">
+        <li>Ve a la estación que sigue (el botón «Cómo llegar» te lleva).</li>
+        <li>Escanea el <b>QR</b> del afiche o acerca tu celular al símbolo <b>NFC</b>.</li>
+        <li>Atrapa con la cámara lo que se escondió alrededor.</li>
+        <li>Entra a la misión 360°, termínala y gana la insignia.</li>
+      </ol>
+      <p class="nota" style="margin-top:10px">Tu progreso se guarda en este celular. Usa siempre el mismo navegador.</p>
+    </section>
+
+    <p class="centro" style="margin-top:22px">
+      <a class="btn sec" href="../index.htm">Jugar el recorrido completo en línea</a>
+    </p>
+    <p class="centro" style="margin-top:14px">
+      <button id="reiniciar" class="btn sec" type="button" style="font-size:13px">Empezar la ruta de nuevo</button>
+    </p>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/progreso.js"></script>
+  <script src="js/mapa.js"></script>
+</body>
+</html>
