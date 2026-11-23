@@ -16,6 +16,9 @@
   var SIN_VOZ_S = 9;         // ventanas sin voz: tiempo para mirarlas antes del contador
   var VOZ_MAX_S = 60;        // por si el navegador no avisa el final del audio
   var MIN_S = 7;             // mínimo abierta antes del contador (por si la voz no suena y termina al instante)
+  // Ventanas que nunca se cierran solas: la pantalla de inicio espera el toque de «¡Empezar!», que es el que deja
+  // sonar el audio en el celular. Es el id de su imagen en la exportación de 3DVista.
+  var SIN_CIERRE = ['DC967C06_F934_E2FD_41B6_0AE3D7737944'];
 
   var pill = document.createElement('div');
   pill.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;display:none;' +
@@ -25,6 +28,33 @@
   document.body.appendChild(pill);
 
   var activa = null;         // la ventana con contador en curso
+  var actual = null;         // la tarjeta abierta ahora (3DVista tiene un solo visor de imagen: una a la vez)
+  var videos = 0;            // videos en ventana abiertos ahora
+  var esperando = 0;         // preguntas que esperan a que se cierre la ventana
+  var PAUSA_PREGUNTA_MS = 700;   // respiro entre cerrar la tarjeta y mostrar la pregunta
+  var PREGUNTA_MAX_S = 90;       // la pregunta sale igual pasado este tiempo, por si algo no avisa
+
+  var registro = [];
+  function anotar(t) { registro.push(Math.round(performance.now() / 100) / 10 + 's ' + t); if (registro.length > 40) registro.shift(); }
+  // Para revisar desde la consola: window.__popupsEstado()
+  window.__popupsEstado = function () {
+    return { hayVentana: hayVentana(), conContador: !!activa, videos: videos, preguntasEsperando: esperando, log: registro.slice() };
+  };
+
+  function urlImagen(img) {
+    try { var lv = img.get('levels') || []; return String(lv[0] && lv[0].get('url') || img.get('id') || ''); }
+    catch (err) { return ''; }
+  }
+
+  function visible(c) { try { return !!(c && c.get('visible')); } catch (err) { return false; } }
+
+  // ¿Hay una tarjeta, una ventana 3D de objeto o un video tapando la pantalla?
+  function hayVentana() {
+    if (videos > 0 || visible(tour.zoomImagePopupPanorama)) return true;
+    var pops = tour.getByClassName('PopupPanoramaOverlay') || [];
+    for (var k = 0; k < pops.length; k++) if (visible(pops[k])) return true;
+    return false;
+  }
 
   function limpiar(v) {
     if (!v) return;
@@ -72,10 +102,21 @@
   // i audio de la ventana, j pausar las voces de fondo, k al mostrar, l al ocultar, m, n.
   tour.showPopupImage = function (a, b, c, d, e, f, g, h, i, j, k, l, m, n) {
     var v = { audio: i || null, cerrada: false };
-    var alOcultar = function () { v.cerrada = true; limpiar(v); if (l) l.apply(this, arguments); };
+    anotar('abre imagen ' + urlImagen(a) + (i ? ' con voz ' + ((i.get('data') || {}).label || '') : ''));
+    var alOcultar = function () {
+      anotar('cierra imagen');
+      v.cerrada = true;
+      limpiar(v);
+      if (l) l.apply(this, arguments);
+    };
+    // Si 3DVista reemplaza una tarjeta por otra sin cerrarla, la anterior deja de contar.
+    if (actual) { actual.cerrada = true; limpiar(actual); }
     limpiar(activa);
+    actual = v;
     v.cerrarFn = showImage.call(this, a, b, c, d, e, f, g, h, i, true, k, alOcultar, m, n);
-    if (!h && typeof v.cerrarFn === 'function') programar(v);
+    var url = urlImagen(a);
+    var fija = SIN_CIERRE.some(function (id) { return url.indexOf(id) !== -1; });
+    if (!h && !fija && typeof v.cerrarFn === 'function') programar(v);
     return v.cerrarFn;
   };
 
@@ -83,11 +124,39 @@
   // a ventana, b video, c lista, d/e tamaño, f cerrar al terminar.
   tour.showPopupMedia = function (a, b, c, d, e, f) {
     this.pauseGlobalAudios(null, true);
+    videos++;
+    anotar('abre video');
     var alCerrar = function () {
       a.unbind('close', alCerrar, this);
+      videos = Math.max(0, videos - 1);
+      anotar('cierra video');
       this.resumeGlobalAudios();
     };
     a.bind('close', alCerrar, this);
     return showMedia.call(this, a, b, c, d, e, true);
+  };
+
+  // Las preguntas (al encontrar el último objeto) esperan a que se cierre la tarjeta o el video que esté abierto,
+  // en vez de salir encima. Se empieza a mirar un instante después porque la tarjeta y la pregunta se lanzan casi a
+  // la vez (la tarjeta 3D del objeto tarda en abrirse).
+  var REVISAR_MS = 300, PRIMERA_MIRADA_MS = 600;
+  var showQuestion = tour.quizShowQuestion;
+  tour.quizShowQuestion = function () {
+    var self = this, args = arguments, inicio = Date.now();
+    anotar('pide pregunta ' + args[0]);
+    return new Promise(function (ok, mal) {
+      function lanzar() {
+        esperando = Math.max(0, esperando - 1);
+        anotar('muestra pregunta ' + args[0]);
+        var r = showQuestion.apply(self, args);
+        if (r && typeof r.then === 'function') r.then(ok, mal); else ok(r);
+      }
+      function revisar() {
+        if (hayVentana() && Date.now() - inicio < PREGUNTA_MAX_S * 1000) { setTimeout(revisar, REVISAR_MS); return; }
+        setTimeout(lanzar, PAUSA_PREGUNTA_MS);
+      }
+      esperando++;
+      setTimeout(revisar, PRIMERA_MIRADA_MS);
+    });
   };
 })(this);
