@@ -7,6 +7,7 @@ window.GDM_RUTA = {
   tour: '../index.htm',
   verificarGPS: true,
   radioMetros: 120,
+  modelos3d: true,          // objetos y personajes en 3D (Meshy); en false vuelven los dibujos planos
   // true: para desbloquear un nivel hay que haber terminado la misión 360° del anterior.
   exigirMisionAnterior: true,
   estaciones: [

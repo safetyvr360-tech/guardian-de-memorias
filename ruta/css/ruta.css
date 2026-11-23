@@ -76,9 +76,12 @@ h1.titulo { font-family: var(--slab); font-size: clamp(30px, 9vw, 42px); line-he
 #ra .capa { position: absolute; inset: 0; }
 .obj { position: absolute; left: 0; top: 0; width: 34vw; max-width: 200px; will-change: transform; cursor: pointer;
   filter: drop-shadow(0 0 14px rgba(255,255,255,.9)) drop-shadow(4px 6px 0 rgba(0,0,0,.25)); }
-.obj img { width: 100%; display: block; animation: obj-flota 2.2s ease-in-out infinite; pointer-events: none; }
+.obj img, .obj model-viewer { width: 100%; display: block; animation: obj-flota 2.2s ease-in-out infinite; pointer-events: none; }
+.obj model-viewer { height: min(34vw, 200px); }
+model-viewer { background: transparent; --poster-color: transparent; --progress-bar-height: 0; }
+model-viewer.personaje { width: min(70vw, 340px); height: 36vh; max-height: none; }
 @keyframes obj-flota { 50% { transform: translateY(-9px) rotate(4deg); } }
-.obj.atrapado img { animation: atrapar .6s ease-in forwards; }
+.obj.atrapado img, .obj.atrapado model-viewer { animation: atrapar .6s ease-in forwards; }
 @keyframes atrapar { 0% { transform: scale(1); } 35% { transform: scale(1.35) rotate(-10deg); }
   100% { transform: scale(0) rotate(200deg); opacity: 0; } }
 .ra-top { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; gap: 10px; align-items: center;

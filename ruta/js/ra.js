@@ -49,6 +49,16 @@
     }
   }
 
+  // Modelo 3D de Meshy (assets/3d/<ruta>.glb) girando solo, con el dibujo como póster mientras carga.
+  // Si los modelos 3D están apagados en config.js o el navegador no carga <model-viewer>, queda el dibujo.
+  function figura(ruta3d, dibujo, alt, clase) {
+    var usar3d = window.GDM_RUTA && window.GDM_RUTA.modelos3d && window.customElements;
+    if (!usar3d) return '<img class="' + (clase || '') + '" src="' + dibujo + '" alt="' + alt + '">';
+    return '<model-viewer class="' + (clase || '') + '" src="assets/3d/' + ruta3d + '.glb" poster="' + dibujo + '" alt="' + alt +
+      '" auto-rotate auto-rotate-delay="0" rotation-per-second="40deg" interaction-prompt="none" disable-zoom disable-pan' +
+      ' disable-tap shadow-intensity="0" exposure="1.1" loading="eager" reveal="auto"></model-viewer>';
+  }
+
   function iniciar(op) {
     var e = op.estacion;
     var voz = new Audio(op.vozIntro);
@@ -99,7 +109,7 @@
     var objs = e.objetos.map(function (o, i) {
       var div = document.createElement('div');
       div.className = 'obj';
-      div.innerHTML = '<img src="assets/n' + e.n + '/' + o[0] + '.webp" alt="' + o[1] + '">';
+      div.innerHTML = figura('n' + e.n + '/' + o[0], 'assets/n' + e.n + '/' + o[0] + '.webp', o[1]);
       capa.appendChild(div);
       var item = { id: o[0], nombre: o[1], el: div, vivo: true,
         dYaw: i === 0 ? 12 : i * 360 / total + (Math.random() * 24 - 12), pitch: i === 0 ? 2 : Math.random() * 26 - 10 };
@@ -227,5 +237,5 @@
   }
 
   window.GDM = window.GDM || {};
-  window.GDM.RA = { iniciar: iniciar, _orientacion: orientacion };
+  window.GDM.RA = { iniciar: iniciar, figura: figura, _orientacion: orientacion };
 })();

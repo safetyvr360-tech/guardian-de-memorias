@@ -77,7 +77,7 @@
   }
 
   function intro() {
-    mostrar(cabecera() + '<img class="personaje" src="assets/' + e.personaje + '.webp" alt="' + NOMBRE[e.personaje] + '">' +
+    mostrar(cabecera() + GDM.RA.figura('personajes/' + e.personaje, 'assets/' + e.personaje + '.webp', NOMBRE[e.personaje], 'personaje') +
       '<div class="globo">' + INTRO[e.n] + '</div>' +
       '<p class="centro">' + '<button id="vamos" class="btn" type="button">📷 ¡Abrir la cámara!</button></p>' +
       '<p class="nota centro" style="margin-top:12px">Te pediremos permiso para usar la cámara y el movimiento del celular. ' +
