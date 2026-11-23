@@ -1,18 +1,21 @@
 // Progreso de la Ruta del Guardián, guardado en el navegador (localStorage, clave «gdm-ruta-v1»).
-// Forma: { desbloqueados: [números de nivel], completados: [números de nivel] }.
+// Forma: { desbloqueados: [n], completados: [n], visitados: [n] }. «visitados» son las estaciones abiertas en persona
+// (QR o NFC del afiche, con GPS si está activo): dan el sello de Guardián caminante. Desde casa se desbloquea sin sello.
 // Lo usan el mapa, las estaciones y el tour (tour-ruta.js). Requiere config.js antes.
 (function () {
   var KEY = 'gdm-ruta-v1';
+  var LISTAS = ['desbloqueados', 'completados', 'visitados'];
   var cfg = window.GDM_RUTA;
 
+  function vacio() { return { desbloqueados: [], completados: [], visitados: [] }; }
+
   function leer() {
+    var out = vacio();
     try {
       var d = JSON.parse(localStorage.getItem(KEY) || '{}');
-      return { desbloqueados: Array.isArray(d.desbloqueados) ? d.desbloqueados : [],
-        completados: Array.isArray(d.completados) ? d.completados : [] };
-    } catch (e) {
-      return { desbloqueados: [], completados: [] };
-    }
+      LISTAS.forEach(function (k) { if (Array.isArray(d[k])) out[k] = d[k].slice(); });
+    } catch (e) { /* progreso dañado o sin acceso: se empieza de cero */ }
+    return out;
   }
 
   function guardar(d) {
@@ -22,8 +25,7 @@
   function agregar(lista, n) {
     var d = leer();
     if (d[lista].indexOf(n) === -1) {
-      d = { desbloqueados: d.desbloqueados.slice(), completados: d.completados.slice() };
-      d[lista].push(n);
+      d[lista] = d[lista].concat([n]);
       guardar(d);
     }
     return d;
@@ -85,7 +87,10 @@
     leer: leer, estacion: estacion, estado: estado, puedeDesbloquear: puedeDesbloquear, siguiente: siguiente,
     desbloquear: function (n) { return agregar('desbloqueados', n); },
     completar: function (n) { agregar('desbloqueados', n); return agregar('completados', n); },
-    reiniciar: function () { return guardar({ desbloqueados: [], completados: [] }); },
-    distancia: distancia, tieneGPS: tieneGPS, urlMision: urlMision, urlComoLlegar: urlComoLlegar
+    visitar: function (n) { return agregar('visitados', n); },
+    visitado: function (n) { return leer().visitados.indexOf(n) !== -1; },
+    reiniciar: function () { return guardar(vacio()); },
+    distancia: distancia, tieneGPS: tieneGPS, urlMision: urlMision, urlComoLlegar: urlComoLlegar,
+    urlCasa: function (n) { return 'estacion.html?n=' + n + '&casa=1'; }
   };
 })();

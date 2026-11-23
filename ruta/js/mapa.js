@@ -21,6 +21,7 @@
     if (estado === 'siguiente') {
       box.appendChild(el('a', { class: 'btn', href: P.urlComoLlegar(e), target: '_blank', rel: 'noopener',
         style: 'font-size:15px;padding:8px 16px 10px' }, '🧭 Cómo llegar'));
+      box.appendChild(el('a', { class: 'btn sec', href: P.urlCasa(e.n), style: 'font-size:14px' }, '🏠 Jugar desde casa'));
       if (P.tieneGPS(e)) {
         var b = el('button', { class: 'btn sec', type: 'button', style: 'font-size:14px' }, '¿Qué tan lejos estoy?');
         b.addEventListener('click', function () { medir(e, b); });
@@ -50,6 +51,7 @@
     if (estado === 'bloqueado') nodo.appendChild(el('span', { class: 'candado' }, '🔒'));
     var info = el('div', { class: 'info' });
     info.appendChild(el('span', { class: 'chip' }, ETIQUETA[estado]));
+    if (P.visitado(e.n)) info.appendChild(el('span', { class: 'chip sello', title: 'Fuiste en persona a esta estación' }, '👣 Sello caminante'));
     info.appendChild(el('h3', { style: 'margin-top:6px' }, 'Nivel ' + e.n + ' · ' + e.nombre));
     info.appendChild(el('p', {}, '📌 ' + e.lugar + (estado === 'completado' ? ' · ' + e.insignia : '')));
     info.appendChild(acciones(e, estado));
@@ -62,13 +64,20 @@
     if (!sig) return '¡Completaste la ruta! Eres Guardián de Memorias de Puerto Colombia. 🦀';
     var est = P.estado(sig.n);
     if (est === 'desbloqueado') return 'Ya desbloqueaste el nivel ' + sig.n + '. Entra a su misión 360° y termínala.';
-    if (d.desbloqueados.length === 0) return 'Empieza en la ' + sig.lugar + ': busca el afiche de la estación 1.';
-    return 'Ve a ' + sig.lugar + ' y escanea el afiche de la estación ' + sig.n + '.';
+    if (d.desbloqueados.length === 0) return 'Empieza en la ' + sig.lugar + ': busca el afiche de la estación 1, o juega el nivel 1 desde casa.';
+    return 'Ve a ' + sig.lugar + ' y escanea el afiche de la estación ' + sig.n + ', o sigue desde casa.';
+  }
+
+  function sellos(d, total) {
+    var n = d.visitados.length;
+    if (n === total) return '👣 ¡Eres Guardián caminante! Visitaste las ' + total + ' estaciones en persona.';
+    return '👣 Sellos de caminante: ' + n + ' de ' + total + (n ? '' : ' · se ganan yendo a cada afiche en persona');
   }
 
   function render() {
     var d = P.leer(), total = cfg.estaciones.length;
     document.getElementById('cuenta').textContent = d.completados.length + ' de ' + total + ' insignias';
+    document.getElementById('sellos').textContent = sellos(d, total);
     document.getElementById('barra').style.width = (100 * d.completados.length / total) + '%';
     document.getElementById('consejo').textContent = consejo(d, P.siguiente());
     camino.innerHTML = '';

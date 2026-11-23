@@ -5,6 +5,7 @@
   var pantalla = document.getElementById('pantalla');
   var params = new URLSearchParams(location.search);
   var n = parseInt(params.get('n'), 10), clave = params.get('k') || '';
+  var CASA = params.get('casa') === '1';     // «Jugar desde casa»: sin clave ni GPS, y sin sello de caminante
   var e = P.estacion(n);
 
   var INTRO = {
@@ -40,23 +41,30 @@
     var falta = P.estacion(r.falta);
     var texto = r.motivo === 'mision'
       ? 'Ya desbloqueaste el nivel ' + falta.n + ', pero te falta <b>terminar su misión 360°</b> para ganar la insignia.'
-      : 'Primero tienes que ir a la estación ' + falta.n + ': <b>' + falta.lugar + '</b>.';
+      : CASA ? 'Primero tienes que jugar el nivel ' + falta.n + ': <b>' + falta.nombre + '</b>.'
+        : 'Primero tienes que ir a la estación ' + falta.n + ': <b>' + falta.lugar + '</b>.';
     var accion = r.motivo === 'mision' ? boton('Terminar el nivel ' + falta.n, P.urlMision(falta.n), 'teal')
-      : boton('🧭 Cómo llegar', P.urlComoLlegar(falta));
+      : CASA ? boton('🏠 Jugar el nivel ' + falta.n + ' desde casa', P.urlCasa(falta.n))
+        : boton('🧭 Cómo llegar', P.urlComoLlegar(falta));
     mostrar(cabecera() + '<p class="centro" style="font-size:60px">🔒</p><div class="tarjeta centro"><p>' + texto +
       '</p><p class="nota" style="margin-top:8px">Los niveles se desbloquean en orden, como en el juego.</p></div>' +
       '<p class="centro" style="margin-top:18px">' + accion + '</p>' + VOLVER);
   }
 
-  function yaDesbloqueada() {
-    mostrar(cabecera() + '<img class="personaje" src="assets/n' + e.n + '/insignia.webp" alt="" style="max-height:28vh">' +
+  // Aviso del sello de Guardián caminante, solo la primera vez que se abre la estación en persona.
+  function sello(nuevo) {
+    return nuevo ? '<div class="sello-nuevo">👣 ¡Ganaste el sello de <b>Guardián caminante</b> de esta estación!</div>' : '';
+  }
+
+  function yaDesbloqueada(nuevoSello) {
+    mostrar(cabecera() + sello(nuevoSello) + '<img class="personaje" src="assets/n' + e.n + '/insignia.webp" alt="" style="max-height:28vh">' +
       '<div class="tarjeta centro" style="margin-top:12px"><p>Ya desbloqueaste este nivel. ¡Bien hecho, guardián!</p></div>' +
       '<p class="centro" style="margin-top:18px">' + boton('Entrar a la misión 360°', P.urlMision(e.n), 'teal') + '</p>' +
       '<p class="centro" style="margin-top:14px"><button id="otra" class="btn sec" type="button">Atrapar otra vez con la cámara</button></p>' + VOLVER);
-    document.getElementById('otra').addEventListener('click', intro);
+    document.getElementById('otra').addEventListener('click', function () { intro(false); });
   }
 
-  function verificarGPS() {
+  function verificarGPS(alLlegar) {
     mostrar(cabecera() + '<p class="centro" style="font-size:54px">📍</p><div class="tarjeta centro">' +
       '<p id="gps-txt">Para abrir esta estación tienes que estar en <b>' + e.lugar + '</b>. Buscando tu ubicación…</p>' +
       '<div id="gps-dist" class="distancia" style="margin-top:8px"></div></div>' +
@@ -68,7 +76,7 @@
     var id = navigator.geolocation.watchPosition(function (pos) {
       var d = P.distancia(pos.coords.latitude, pos.coords.longitude, e.lat, e.lng);
       var margen = Math.min(pos.coords.accuracy || 0, 60);
-      if (d - margen <= cfg.radioMetros) { navigator.geolocation.clearWatch(id); intro(); return; }
+      if (d - margen <= cfg.radioMetros) { navigator.geolocation.clearWatch(id); alLlegar(); return; }
       document.getElementById('gps-txt').innerHTML = 'Todavía no estás en <b>' + e.lugar + '</b>. Acércate un poco más:';
       document.getElementById('gps-dist').textContent = d < 1000 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km';
     }, function () {
@@ -76,8 +84,8 @@
     }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 30000 });
   }
 
-  function intro() {
-    mostrar(cabecera() + GDM.RA.figura('personajes/' + e.personaje, 'assets/' + e.personaje + '.webp', NOMBRE[e.personaje], 'personaje') +
+  function intro(nuevoSello) {
+    mostrar(cabecera() + sello(nuevoSello) + GDM.RA.figura('personajes/' + e.personaje, 'assets/' + e.personaje + '.webp', NOMBRE[e.personaje], 'personaje') +
       '<div class="globo">' + INTRO[e.n] + '</div>' +
       '<p class="centro">' + '<button id="vamos" class="btn" type="button">📷 ¡Abrir la cámara!</button></p>' +
       '<p class="nota centro" style="margin-top:12px">Te pediremos permiso para usar la cámara y el movimiento del celular. ' +
@@ -97,18 +105,32 @@
         { texto: 'Entrar a la misión 360°', href: P.urlMision(e.n), clase: 'teal' },
         { texto: '🗺️ Ver el mapa', href: './', clase: 'sec' }
       ],
-      alCerrar: intro
+      alCerrar: function () { intro(false); }
     });
   }
 
-  function iniciar() {
-    if (!e || clave !== e.clave) return invalida();
+  // Abre el nivel si ya toca en el orden de la ruta; si no, explica qué falta.
+  function abrir(nuevoSello) {
     var estado = P.estado(n);
-    if (estado === 'desbloqueado' || estado === 'completado') return yaDesbloqueada();
+    if (estado === 'desbloqueado' || estado === 'completado') return yaDesbloqueada(nuevoSello);
     var r = P.puedeDesbloquear(n);
     if (!r.ok) return bloqueada(r);
-    if (P.tieneGPS(e)) return verificarGPS();
-    intro();
+    intro(nuevoSello);
+  }
+
+  // En persona (clave del QR/NFC y, si hay coordenadas, GPS): además del nivel gana el sello de Guardián caminante.
+  function enPersona() {
+    var nuevo = !P.visitado(n);
+    P.visitar(n);
+    abrir(nuevo);
+  }
+
+  function iniciar() {
+    if (!e) return invalida();
+    if (CASA) return abrir(false);
+    if (clave !== e.clave) return invalida();
+    if (P.tieneGPS(e)) return verificarGPS(enPersona);
+    enPersona();
   }
 
   iniciar();

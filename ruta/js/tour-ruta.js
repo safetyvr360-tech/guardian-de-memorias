@@ -83,7 +83,9 @@
         'padding:22px;box-shadow:6px 6px 0 #3FA7A0"><div style="font-size:54px">🔒</div>' +
         '<div style="font:bold 24px Rockwell,Georgia,serif;margin:6px 0">Nivel ' + n + ' bloqueado</div>' +
         '<p style="font-size:17px">Para jugarlo tienes que ir a <b>' + e.lugar + '</b> y escanear el afiche de la estación ' + n +
-        ' o acercar tu celular a su NFC.</p><a style="' + BTN + '" href="' + BASE + '">🗺️ Ver el mapa de la ruta</a></div>';
+        ' o acercar tu celular a su NFC. ¿No puedes ir? Juégalo desde casa.</p>' +
+        '<a style="' + BTN + '" href="' + BASE + P.urlCasa(n) + '">🏠 Jugar desde casa</a>' +
+        '<a style="' + BTN + 'background:#257A74;" href="' + BASE + '">🗺️ Ver el mapa de la ruta</a></div>';
       candado.style.display = 'flex';
     }
 
@@ -91,7 +93,8 @@
       var sig = P.estacion(n + 1);
       panel.innerHTML = '<div style="font:bold 22px Rockwell,Georgia,serif;color:#1F6E43">¡Nivel ' + n + ' completado!</div>' +
         '<div style="margin:4px 0 8px;font-size:16px">' + (sig
-          ? 'Tu siguiente parada: <b>' + sig.lugar + '</b>. Camina hasta allá y escanea el afiche de la estación ' + sig.n + '.'
+          ? 'Tu siguiente parada: <b>' + sig.lugar + '</b>. Camina hasta allá y escanea el afiche de la estación ' + sig.n +
+            ' para ganar su sello 👣, o sigue desde casa en el mapa.'
           : '¡Terminaste la Ruta del Guardián!') + '</div>' +
         (sig ? '' : '<button data-cert type="button" style="' + BTN + '">Ver mi certificado ➜</button>') +
         '<a style="' + BTN + (sig ? '' : 'background:#257A74;') + '" href="' + BASE + '">🗺️ Ver el mapa de la ruta</a>';
@@ -135,6 +138,7 @@
   }
 
   esperarTour(function (rp) {
+    correr(rp, 'popups.js');              // ventanas que se cierran solas y pausan las voces de fondo
     correr(rp, 'celebraciones.js');
     correr(rp, 'movimiento.js');
     if (!RUTA) { correr(rp, 'navegacion.js'); return; }

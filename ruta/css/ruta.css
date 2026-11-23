@@ -53,6 +53,11 @@ h1.titulo { font-family: var(--slab); font-size: clamp(30px, 9vw, 42px); line-he
 .parada .acciones { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .parada:nth-child(even) .acciones { justify-content: flex-end; }
 .parada.siguiente .info { border-color: var(--coral); box-shadow: 4px 4px 0 var(--coral); }
+.chip.sello { background: var(--mostaza); margin-left: 6px; }
+.sellos { margin-top: 8px; font-weight: bold; font-size: 15px; }
+.sello-nuevo { margin: 10px 0; text-align: center; background: var(--mostaza); border: 3px solid var(--tinta);
+  border-radius: 16px; padding: 8px 12px; box-shadow: 4px 4px 0 var(--tinta); font-size: 16px;
+  animation: ins-entra .7s cubic-bezier(.2,1.6,.4,1) both; }
 .pulso { animation: pulso 1.4s ease-in-out infinite; }
 @keyframes pulso { 50% { transform: scale(1.08); } }
 
