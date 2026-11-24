@@ -139,7 +139,10 @@
 
   esperarTour(function (rp) {
     correr(rp, 'videos.js');              // en el celular de pie, videos de ventana verticales
-    correr(rp, 'popups.js');              // ventanas que se cierran solas y pausan las voces de fondo
+    // La avería (nivel 2) y el amerizaje (nivel 3) van antes que popups.js: así sus preguntas esperan a que se cierre
+    // la tarjeta y después salen dentro del minijuego.
+    correr(rp, 'averia.js').then(function () { return correr(rp, 'amerizaje.js'); })
+      .then(function () { return correr(rp, 'popups.js'); });
     correr(rp, 'celebraciones.js');
     correr(rp, 'movimiento.js');
     if (!RUTA) { correr(rp, 'navegacion.js'); return; }
