@@ -138,6 +138,7 @@
   }
 
   esperarTour(function (rp) {
+    correr(rp, 'videos.js');              // en el celular de pie, videos de ventana verticales
     correr(rp, 'popups.js');              // ventanas que se cierran solas y pausan las voces de fondo
     correr(rp, 'celebraciones.js');
     correr(rp, 'movimiento.js');
